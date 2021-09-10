@@ -20,8 +20,8 @@ type Hub interface {
 
 	HandlerOnline(User)        // 当有用户上线时，相应的处理方法
 	HandlerLogout(User)        // 当有用户下线时，相应的处理方法
-	HandlerPrivateMsg(Message) // 处理用户发送的信息
-	HandlerGroupMsg(Message)   //
+	HandlerPrivateMsg(Message) // 处理用户发送的私聊信息
+	HandlerGroupMsg(Message)   // 处理用户发送的群聊消息
 	Run()
 }
 
@@ -48,7 +48,10 @@ func (h *hub) HandlerPrivateMsg(msg Message) {
 
 }
 
+// HandlerGroupMsg 处理用户发送的群聊消息
 func (h *hub) HandlerGroupMsg(msg Message) {
+	// 发送给全部用户
+	// TODO 发送给指定群用户
 	for _, conn := range h.users {
 		if err := conn.WriteMessage(websocket.BinaryMessage, msg.Data()); err != nil {
 			log.Println(err)

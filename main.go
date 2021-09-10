@@ -25,7 +25,6 @@ func init() {
 // 'upgrade' token not found in 'Connection' header
 func main() {
 	hub := server.NewHub()
-	log.Printf("%p \n", hub)
 	go hub.Run()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +36,10 @@ func main() {
 		}
 		//log.Printf("%p \n", &hub)
 		user := server.NewUser(conn, r.RemoteAddr, "test")
-		user.ServerWS(hub)
+		if err := user.Server(hub); err != nil {
+			log.Println("user server error: ", err)
+			return
+		}
 	})
 
 	//http.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {

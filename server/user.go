@@ -18,9 +18,9 @@ type User interface {
 	MsgChan() chan Message // 缓存用户接收到的信息
 
 	Send(Hub, Message) // 将 Message 发送到 Hub
-	Receive(Hub)       // 从 conn 中读取消息，并发送到 Hub 中
+	Receive(Hub) error      // 从 conn 中读取用户输入的消息，并发送到 Hub 中，进行后续处理
 	Logout()           // 用户要退出时，调用该方法
-	ServerWS(hub Hub)  //
+	Server(hub Hub) error   // 为该 user 开启聊天服务
 }
 
 type user struct {
@@ -53,42 +53,45 @@ func (u *user) Send(hub Hub, msg Message) {
 	switch msg.(type) {
 	case *privateChatMessage:
 		hub.PrivateMsgChan() <- msg
-		//// 如果用户当前不在线
-		//if !msg.To().user.Online() {
-		//	// TODO 暂时保存到队列中
-		//	return
-		//}
-		//if err := u.conn.WriteMessage(msg.Type(), msg.Data()); err != nil {
-		//	log.Println(err)
-		//	return
-		//}
 	case *groupChatMessage:
 		hub.GroupMsgChan() <- msg
-		//for _, conn := range hub.Users() {
-		//	if err := conn.WriteMessage(msg.Type(), msg.Data()); err != nil {
-		//		log.Println(err)
-		//		continue
-		//	}
-		//}
 	}
 }
 
-func (u *user) Receive(hub Hub) {
+// Receive 从 conn 中读取用户输入的消息，并发送到 Hub 中，让 Hub 进行后续处理
+func (u *user) Receive(hub Hub) error {
+	pack := NewDataPack()
 	for {
 		_, msg, err := u.conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
-			return
+			return err
 		}
-		hub.GroupMsgChan() <- NewGroupChatMessage(u.id, 0, 0/*FIXME*/, msg)
+
+		m, err := pack.UnPack(msg)
+		if err != nil {
+			return err
+		}
+		log.Println(m)
+
+		// 根据消息的类型，发送到对应的 chan 上
+		switch m.MsgType() {
+		case PrivateMsg:
+			hub.PrivateMsgChan() <- m
+		case GroupMsg:
+			hub.GroupMsgChan() <- m
+		}
 	}
 }
 
-func (u *user) ServerWS(hub Hub) {
+func (u *user) Server(hub Hub) (err error) {
 	// 上线信息
 	hub.OnlineChan() <- u
-	log.Printf("%p \n", hub)
-	go u.Receive(hub)
+
+	go func() {
+		err = u.Receive(hub)
+	}()
+
+	return
 }
 
 func (u *user) Online() bool {

@@ -36,6 +36,43 @@ type Message interface {
 	Time() time.Time
 }
 
+// -------------------- 私聊消息 --------------------
+type privateChatMessage struct {
+	basicMessage
+}
+
+func NewPrivateChatMessage(from, to uint64, dataType DataType, data []byte) *privateChatMessage {
+	m := &privateChatMessage{basicMessage{
+		from:     from,
+		to:       to,
+		dataType: dataType,
+		msgType:  PrivateMsg,
+		data:     data,
+		time:     time.Now(),
+		len:      (uint32)(len(data)),
+	}}
+	return m
+}
+
+// -------------------- 群聊消息 --------------------
+
+type groupChatMessage struct {
+	basicMessage
+}
+
+func NewGroupChatMessage(from, groupId uint64, dataType DataType, data []byte) *groupChatMessage {
+	return &groupChatMessage{basicMessage{
+		from:     from,
+		to:       groupId,
+		dataType: dataType,
+		msgType:  GroupMsg,
+		data:     data,
+		time:     time.Now(),
+		len:      (uint32)(len(data)),
+	}}
+}
+
+// 通用类
 type basicMessage struct {
 	from     uint64
 	to       uint64
@@ -72,110 +109,4 @@ func (b *basicMessage) Len() uint32 {
 
 func (b *basicMessage) Time() time.Time {
 	return b.time
-}
-
-// -------------------- 私聊消息 --------------------
-type privateChatMessage struct {
-	*basicMessage
-}
-
-func NewPrivateChatMessage(
-	from, to uint64, dataType DataType, data []byte) *privateChatMessage {
-	m := &privateChatMessage{&basicMessage{
-		from:     from,
-		to:       to,
-		dataType: dataType,
-		msgType:  PrivateMsg,
-		data:     data,
-		time:     time.Now(),
-		len:      (uint32)(len(data)),
-	}}
-	//return &privateChatMessage{
-	//	from:     from,
-	//	to:       to,
-	//	dataType: dataType,
-	//	msgType:  PrivateMsg,
-	//	data:     data,
-	//	time:     time.Now(),
-	//	len:      (uint32)(len(data)),
-	//}
-	return m
-}
-
-//func (m *privateChatMessage) From() uint64 {
-//	return m.from
-//}
-//
-//func (m *privateChatMessage) To() uint64 {
-//	return m.to
-//}
-//
-//func (m *privateChatMessage) DataType() DataType {
-//	return m.dataType
-//}
-//
-//func (m *privateChatMessage) MsgType() MsgType {
-//	return m.msgType
-//}
-//
-//func (m *privateChatMessage) Data() []byte {
-//	return m.data
-//}
-//
-//func (m *privateChatMessage) Len() uint32 {
-//	return m.len
-//}
-//
-//func (m *privateChatMessage) Time() time.Time {
-//	return m.time
-//}
-
-// -------------------- 群聊消息 --------------------
-
-type groupChatMessage struct {
-	from     uint64
-	to       uint64
-	data     []byte
-	time     time.Time
-	msgType  MsgType
-	dataType DataType
-}
-
-func NewGroupChatMessage(from, groupId uint64, dataType DataType, data []byte) *groupChatMessage {
-	return &groupChatMessage{
-		from:     from,
-		to:       groupId,
-		dataType: dataType,
-		msgType:  GroupMsg,
-		data:     data,
-		time:     time.Now(),
-	}
-}
-
-func (m *groupChatMessage) From() uint64 {
-	return m.from
-}
-
-func (m *groupChatMessage) To() uint64 {
-	return m.to
-}
-
-func (m *groupChatMessage) MsgType() MsgType {
-	return m.msgType
-}
-
-func (m *groupChatMessage) DataType() DataType {
-	return m.dataType
-}
-
-func (m *groupChatMessage) Data() []byte {
-	return m.data
-}
-
-func (m *groupChatMessage) Len() uint32 {
-	return (uint32)(len(m.data))
-}
-
-func (m *groupChatMessage) Time() time.Time {
-	return m.time
 }
