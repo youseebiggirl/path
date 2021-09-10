@@ -75,12 +75,12 @@ func (u *user) Send(hub Hub, msg Message) {
 
 func (u *user) Receive(hub Hub) {
 	for {
-		_type, msg, err := u.conn.ReadMessage()
+		_, msg, err := u.conn.ReadMessage()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		hub.GroupMsgChan() <- NewGroupChatMessage(u, 0, MsgType(_type), msg)
+		hub.GroupMsgChan() <- NewGroupChatMessage(u.id, 0, 0/*FIXME*/, msg)
 	}
 }
 
